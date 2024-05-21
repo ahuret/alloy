@@ -6,8 +6,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/grafana/alloy/internal/component"
@@ -36,6 +40,7 @@ func (a *AlloyAPI) RegisterRoutes(urlPrefix string, r *mux.Router) {
 	r.Handle(path.Join(urlPrefix, "/components"), httputil.CompressionHandler{Handler: a.listComponentsHandler()})
 	r.Handle(path.Join(urlPrefix, "/components/{id:.+}"), httputil.CompressionHandler{Handler: a.getComponentHandler()})
 	r.Handle(path.Join(urlPrefix, "/peers"), httputil.CompressionHandler{Handler: a.getClusteringPeersHandler()})
+	r.Handle(path.Join(urlPrefix, "/debug/{id:.+}"), a.startDebugStream())
 }
 
 func (a *AlloyAPI) listComponentsHandler() http.HandlerFunc {
@@ -105,5 +110,33 @@ func (a *AlloyAPI) getClusteringPeersHandler() http.HandlerFunc {
 			return
 		}
 		_, _ = w.Write(bb)
+	}
+}
+
+func (a *AlloyAPI) startDebugStream() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		componentID := vars["id"]
+
+		ctx := r.Context()
+		sampleProb, _ := strconv.ParseFloat(r.URL.Query().Get("sampleProb"), 64)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				var builder strings.Builder
+				builder.WriteString(fmt.Sprintf("some fixture data, component id %s, sample prob %f", componentID, sampleProb))
+				// |;| delimiter is added at the end of every chunk
+				builder.WriteString("|;|")
+				_, writeErr := w.Write([]byte(builder.String()))
+				if writeErr != nil {
+					return
+				}
+				w.(http.Flusher).Flush()
+				time.Sleep(time.Second)
+			}
+		}
 	}
 }
