@@ -25,9 +25,13 @@ export const useStreaming = (
       try {
         const response = await fetch(`./api/v0/web/debug/${componentID}?sampleProb=${sampleProb}`, {
           signal: abortController.signal,
+          cache: 'no-cache',
+          credentials: 'same-origin',
         });
         if (!response.ok || !response.body) {
-          throw new Error(response.statusText || 'Unknown error');
+          const text = await response.text();
+          const errorMessage = `Failed to connect, status code: ${response.status}, reason: ${text}`;
+          throw new Error(errorMessage);
         }
 
         const reader = response.body.getReader();
