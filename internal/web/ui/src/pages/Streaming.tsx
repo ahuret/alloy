@@ -10,7 +10,7 @@ import { useStreaming } from '../hooks/stream';
 import styles from './Streaming.module.css';
 
 function PageStreaming() {
-  const { componentID } = useParams();
+  const { '*': componentID } = useParams();
   const [enabled, setEnabled] = useState(true);
   const [data, setData] = useState<string[]>([]);
   const [sampleProb, setSampleProb] = useState(1);

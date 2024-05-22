@@ -101,7 +101,7 @@ export const ComponentView: FC<ComponentViewProps> = (props) => {
         </div>
 
         <div className={styles.debugLink}>
-          <a href={`debug/${props.component.localID}`}>
+          <a href={`debug/${pathJoin([props.component.moduleID, props.component.localID])}`}>
             Live debugging <FontAwesomeIcon icon={faBug} />
           </a>
         </div>
