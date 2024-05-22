@@ -46,10 +46,11 @@ export const useStreaming = (
           const decodedChunk = decoder.decode(value, { stream: true });
 
           setData((prevValue) => {
-            const newValue = decodedChunk.slice(0, -6).split('|;|');
+            const newValue = decodedChunk.split('|;|');
+            newValue.pop(); // last element is empty because of the split, we discard it
             let dataArr = prevValue.concat(newValue);
             if (dataArr.length > maxLines) {
-              dataArr = dataArr.slice(-maxLines);
+              dataArr = dataArr.slice(-maxLines); // truncate the array to keep the last {maxLines} lines
             }
             return dataArr;
           });
